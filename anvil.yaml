@@ -14,15 +14,21 @@ db_schema:
       type: string
     server: full
     title: env
-name: Custom HTML 2
-package_name: Custom_HTML_2
+dependencies:
+- dep_id: dep_pw2ud2oun5csc
+  resolution_hints: {app_id: CCW3SYLSAQHLCF2A, name: anvil_testing, package_name: anvil_testing}
+  version: {branch: master}
+metadata: {description: Familiar environment variables server-side using app_tables, logo_img: 'asset:env_var.jpg', title: ENVironment variables}
+name: ENV
+package_name: ENV
 runtime_options:
   client_version: '3'
   server_spec: {base: python310-minimal}
   server_version: python3-sandbox
   version: 2
 services:
-- client_config: {}
+- client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
-startup_form: Form1
+startup: {module: _README, type: form}
+startup_form: null
