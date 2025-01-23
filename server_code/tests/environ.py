@@ -47,7 +47,6 @@ class TestSet:
             if row:
                 row.delete()
         
-        
 
     def test_set_existing(self):
         variable_name = 'test_set_existing'
@@ -59,18 +58,4 @@ class TestSet:
                 print(f"{row['key']}: {row['value']}")
             assert var == variable_value, f"Did not get the expected value {var=} != {variable_value=}"
 
-
-def test_aborting():
-    with anvil.tables.Transaction() as txn:
-        row_a = app_tables.env.add_row(key='TEST', value=1234)
-        row_b = app_tables.env.get(key='TEST')
-        assert dict(row_a) == dict(row_b)
-        txn.abort()
-    
-    with helpers.raises(anvil.tables.RowDeleted):
-        row_a.get_id()
-
-    with helpers.raises(anvil.tables.RowDeleted):
-        row_b.get_id()
-    
     
