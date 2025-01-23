@@ -67,3 +67,10 @@ def test_aborting():
         assert dict(row_a) == dict(row_b)
         txn.abort()
     
+    with helpers.raises(anvil.tables.RowDeleted):
+        row_a.get_id()
+
+    with helpers.raises(anvil.tables.RowDeleted):
+        row_b.get_id()
+    
+    
