@@ -7,3 +7,5 @@ unique_ids:
   scripts: {}
   server_modules:
     environ: '1737586641921958205439304.36'
+    tests: '1737588982007864628272150.3269'
+    tests.environ: '1737588990196342178968474.2225'
