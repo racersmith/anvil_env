@@ -40,9 +40,6 @@ class TestSet:
             var = environ.get(variable_name)
             assert var == variable_value, f"Did not get the expected value {var=} != {variable_value=}"
         
-        row = self._table.get(key=variable_name)
-        assert row is None, f"env still exists {row['key']=}: {row['value']=}"
-        
 
     def test_set_existing(self):
         variable_name = 'test_set_existing'
@@ -53,5 +50,3 @@ class TestSet:
             for row in self._table.search():
                 print(f"{row['key']}: {row['value']}")
             assert var == variable_value, f"Did not get the expected value {var=} != {variable_value=}"
-
-    

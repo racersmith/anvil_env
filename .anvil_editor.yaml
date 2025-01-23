@@ -1,8 +1,7 @@
 unique_ids:
   assets:
     env_var.jpg: '1737588549114553434667085.3198'
-  forms:
-    _README: '1737586555831730846703954.4166'
+  forms: {}
   modules: {}
   scripts: {}
   server_modules:
