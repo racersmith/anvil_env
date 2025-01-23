@@ -33,19 +33,15 @@ class TestGet:
 class TestSet:
     _table = app_tables.env
     def test_set_new(self):
-        variable_name = 'test_set_new'
-        variable_value = 1234
-        with anvil.tables.Transaction() as txn:
-            print(txn.__dict__)
-            print(dir(txn))
-            
-            assert self._table.get(key=variable_name) is None, f"variable already exists!"
+        variable_name = helpers.gen_str()
+        variable_value = helpers.gen_int()
+        with helpers.temp_writes():            
             environ.set(variable_name, variable_value)
             var = environ.get(variable_name)
             assert var == variable_value, f"Did not get the expected value {var=} != {variable_value=}"
-            row = self._table.get(key=variable_name)
-            if row:
-                row.delete()
+        
+        row = self._table.get(key=variable_name)
+        assert row is None, f"env still exists {row['key']=}: {row['value']=}"
         
 
     def test_set_existing(self):
