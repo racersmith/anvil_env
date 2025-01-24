@@ -1,8 +1,9 @@
-from anvil_testing import helpers
 from anvil.tables import app_tables
 import anvil.tables
 
-from .. import environ
+from anvil_testing import helpers
+
+from ... import environ
 
 
 class TestGet:
