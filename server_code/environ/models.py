@@ -9,25 +9,25 @@ class EnvDB:
         self.is_ready = self._is_ready()
         self.table = self._get_table()
 
-    def _get_table(self):
-        """get the environment variable app table"""
-        if self._table_created:
-            return app_tables[self.name]
-        else:
-            return None
-
     def _is_ready(self):
         """Check that the table is setup and ready for use"""
         return self._table_created() and not self._missing_table_columns()
 
     def _table_created(self) -> bool:
         return self.name in app_tables
-
+    
     def _missing_table_columns(self) -> set:
         table_cols = set()
         if table:=self._get_table():
             table_cols = {col["name"] for col in table.list_columns()}
         return self.required_columns - table_cols
+    
+    def _get_table(self):
+        """get the environment variable app table"""
+        if self._table_created():
+            return app_tables[self.name]
+        else:
+            return None
 
     def __str__(self) -> str:
         info = f"ENV Table Status: {'Ready' if self.is_ready else 'Requires setup'}\n"
