@@ -30,7 +30,18 @@ def set(variable: str, value, info: str | None = None) -> None:
 
 
 def get(variable: str, default=LookupError):
-    """Get an environment variable"""
+    """Get an environment variable
+    Args:
+        variable, name of variable
+        default, value to return if the varible is not available
+
+    Returns:
+        the object from the env table or the default value if set.
+
+    Raises:
+        rasies a LookupError if the varible is not available in the env table and no
+        default value is given.
+    """
     if DB.is_ready:
         row = DB.table.get(key=variable)
         if row:
