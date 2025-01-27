@@ -14,14 +14,16 @@ class EnvDB:
         return self._table_created() and not self._missing_table_columns()
 
     def _table_created(self) -> bool:
+        """Check if the table has been created"""
         return self.name in app_tables
-    
+
     def _missing_table_columns(self) -> set:
+        """Check for missing columns in table"""
         table_cols = set()
-        if table:=self._get_table():
+        if table := self._get_table():
             table_cols = {col["name"] for col in table.list_columns()}
         return self.required_columns - table_cols
-    
+
     def _get_table(self):
         """get the environment variable app table"""
         if self._table_created():
@@ -59,13 +61,15 @@ class Variables:
 
     def __repr__(self):
         return self.__str__()
-    
+
     @property
     def all(self):
+        """Get a set of all registered variable names"""
         return self.in_use | self.available
 
     @property
     def in_use(self):
+        """Get a set of variable names that are being set from the env table"""
         return self._in_use
 
     def _register_in_use(self, variable: str):
@@ -74,6 +78,9 @@ class Variables:
 
     @property
     def available(self):
+        """Get a set of varible names that are utilizing their default value
+        and not present in the env table.
+        """
         return self._available
 
     def _register_available(self, variable: str):
