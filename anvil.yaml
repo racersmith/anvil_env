@@ -18,7 +18,7 @@ dependencies:
 - dep_id: dep_pw2ud2oun5csc
   resolution_hints: {app_id: CCW3SYLSAQHLCF2A, name: anvil_testing, package_name: anvil_testing}
   version: {branch: master}
-metadata: {description: Familiar environment variables server-side using app_tables, logo_img: 'asset:env_var.jpg', title: ENVironment variables}
+metadata: {description: Familiar environment variables server-side using app_tables, logo_img: 'asset:env_var-logo.png', title: ENVironment variables}
 name: ENV
 package_name: ENV
 runtime_options:
@@ -30,5 +30,5 @@ services:
 - client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
-startup: null
+startup: {module: _README, type: form}
 startup_form: null
