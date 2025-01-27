@@ -19,13 +19,43 @@ class TestEnvDB:
 
 class TestVariables:
     def test_empty(self):
-        pass
+        VARIABLES = models.Variables()
+        assert len(VARIABLES.in_use) == 0
+        assert len(VARIABLES.available) == 0
+        assert len(VARIABLES.all) == 0
 
     def test_available(self):
-        pass
+        VARIABLES = models.Variables()
+        VARIABLES._register_available('test_var')
+        VARIABLES._register_available('test_var')
+        assert len(VARIABLES.in_use) == 0
+        assert len(VARIABLES.available) == 1
+        assert len(VARIABLES.all) == 1
+        assert 'test_var' in VARIABLES.available
+        
 
     def test_in_use(self):
-        pass
+        VARIABLES = models.Variables()
+        VARIABLES._register_in_use('in_use_var')
+        VARIABLES._register_in_use('in_use_var_2')
+        VARIABLES._register_in_use('in_use_var_2')
+        assert len(VARIABLES.in_use) == 2
+        assert len(VARIABLES.available) == 0
+        assert len(VARIABLES.all) == 2
+        assert 'in_use_var' in VARIABLES.in_use
+        assert 'in_use_var_2' in VARIABLES.in_use
 
     def test_all(self):
-        pass
+        VARIABLES = models.Variables()
+        VARIABLES._register_in_use('in_use_var')
+        VARIABLES._register_in_use('in_use_var_2')
+        VARIABLES._register_available('test_var')
+
+        VARIABLES._register_in_use('in_use_var')
+        VARIABLES._register_available('test_var')
+        assert len(VARIABLES.in_use) == 2
+        assert len(VARIABLES.available) == 1
+        assert len(VARIABLES.all) == 3
+        assert 'test_var' in VARIABLES.available
+        assert 'in_use_var' in VARIABLES.in_use
+        assert 'in_use_var_2' in VARIABLES.in_use
