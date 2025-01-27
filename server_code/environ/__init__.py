@@ -1,1 +1,1 @@
-from .src import get, set
+from .src import get, set, REGISTERED
