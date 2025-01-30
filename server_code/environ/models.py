@@ -20,7 +20,8 @@ class EnvDB:
     def _missing_table_columns(self) -> set:
         """Check for missing columns in table"""
         table_cols = set()
-        if table := self._get_table():
+        table = self._get_table()
+        if table:
             table_cols = {col["name"] for col in table.list_columns()}
         return self.required_columns - table_cols
 
