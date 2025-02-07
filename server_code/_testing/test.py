@@ -1,20 +1,4 @@
-from anvil import app
+from anvil_testing import helpers
+from . import tests
 
-"""
-Expose an endpoint to run tests at when we are in a debug environment.
-You will need to publish the debug version before this can be accessed.
-"""
-
-if "debug" in app.environment.tags and app.id == 'AFKPYPDLJMH2TYVK':
-    import anvil.server
-    test_endpoint = "/test"
-    print("Tests can be run here:")
-    print(f"{anvil.server.get_app_origin('debug')}{test_endpoint}")
-    
-    @anvil.server.route(test_endpoint)
-    def run() -> anvil.server.HttpResponse:
-        from . import tests
-        import anvil_testing
-
-        results = anvil_testing.auto.run(tests, quiet=False)
-        return anvil.server.HttpResponse(body=results)
+helpers.create_test_webpage(tests, '/test', 'AFKPYPDLJMH2TYVK', 'ENV')
