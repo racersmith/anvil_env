@@ -10,9 +10,6 @@ if "debug" in app.environment.tags and app.id == 'AFKPYPDLJMH2TYVK':
     test_endpoint = "/test"
     print("Tests can be run here:")
     print(f"{anvil.server.get_app_origin('debug')}{test_endpoint}")
-
-    function_name = f"route:{test_endpoint}"
-    from anvil._server import registrations
     
     @anvil.server.route(test_endpoint)
     def run() -> anvil.server.HttpResponse:
