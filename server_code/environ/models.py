@@ -1,5 +1,6 @@
 from anvil.tables import app_tables
 
+from typing import Set
 
 class EnvDB:
     def __init__(self, env_table_name: str):
@@ -7,8 +8,9 @@ class EnvDB:
         self.required_columns = {"key", "value", "info"}
         self.is_ready = self._is_ready()
         self.table = self._get_table()
+        self.development_allowed = self._development_allowed()
     
-    def _is_ready(self):
+    def _is_ready(self) -> bool:
         """Check that the table is setup and ready for use"""
         return self._table_created() and not self._missing_table_columns()
 
@@ -16,14 +18,20 @@ class EnvDB:
         """Check if the table has been created"""
         return self.name in app_tables
 
-    def _missing_table_columns(self) -> set:
-        """Check for missing columns in table"""
-        table_cols = set()
+    def _available_columns(self) -> Set[str]:
         table = self._get_table()
         if table:
-            table_cols = {col["name"] for col in table.list_columns()}
-        return self.required_columns - table_cols
+            return {col["name"] for col in table.list_columns()}
+        else:
+            return set()
+    
+    def _missing_table_columns(self) -> Set[str]:
+        """Check for missing columns in table"""
+        return self.required_columns - self._available_columns()
 
+    def _development_allowed(self) -> bool:
+        return 'development' in self._available_columns()
+    
     def _get_table(self):
         """get the environment variable app table"""
         if self._table_created():
@@ -101,9 +109,9 @@ class Variables:
         self._available = set()
 
     def __str__(self):
-        in_use = "\n\t".join([str(variable) for variable in self.in_use]) or "No variables in use."
-        available = "\n\t".join([str(variable) for variable in self.available]) or "No variables available."
-        return f"Environment Variables\nin_use:\n\t{in_use}\navailable:\n\t{available}"
+        in_use = "\n\t\t".join([str(variable) for variable in self.in_use]) or "No variables in use."
+        available = "\n\t\t".join([str(variable) for variable in self.available]) or "No variables available."
+        return f"Environment Variables\n\tin_use:\n\t\t{in_use}\n\tavailable:\n\t\t{available}"
 
     @property
     def detailed(self):

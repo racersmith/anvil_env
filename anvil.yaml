@@ -1,5 +1,19 @@
 allow_embedding: false
 db_schema:
+  basic_env:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: key
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: value
+      type: simpleObject
+    - admin_ui: {order: 2, width: 200}
+      name: info
+      type: string
+    server: full
+    title: basic_env
   env:
     client: none
     columns:
