@@ -1,5 +1,4 @@
 from anvil.tables import app_tables
-import anvil.tables
 
 from anvil_testing import helpers
 
@@ -29,7 +28,7 @@ class TestGet:
     def test_existing_with_default(self):
         variable_name = "test_existing_with_default"
         variable_value = str(hash(variable_name))
-        with helpers.temp_row(self._table, key=variable_name, value=variable_value):
+        with helpers.temp_row(self._table, key=variable_name, value=variable_value, development=environ.D):
             var = environ.get(variable_name, None)
             assert (
                 var == variable_value

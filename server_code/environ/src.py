@@ -14,29 +14,28 @@ DB = models.EnvDB(env_table_name='env')
 VARIABLES = models.Variables()
 
 # Check if we are in the published or development mode
-DEVELOPMENT_MODE = 'debug' in app.environment.tags
+DEVELOPMENT_MODE = app.branch != 'published'
 
 
-def set(variable: str, value, info: str | None = None, development: bool=False) -> None:
+def set(name: str, value, info: str | None = None, development: bool=False) -> None:
     """Set an environment variable
     Args:
-        variable: name of the variable to set
+        name: name of the variable to set
         value: value for the variable, can be any standard python object
         info: human readable information about the environment varaible
         development: Value is used for development environments only
     """    
     if DB.is_ready:
+        search = {'key': name, 'development': development}
         row = (
-            DB.table.get(key=variable)
-            or DB.table.add_row(key=variable)
+            DB.table.get(**search)
+            or DB.table.add_row(**search)
         )
-        
-        row['value'] = value
-        row['info'] = info
-        row['development'] = development
-        VARIABLES._register_in_use(variable)
+
+        data = {'value': value, 'info': info}
+        row.update(data)
     else:
-        raise tables.TableError("'env' table not set up.")
+        raise tables.TableError(f"'{DB.name}' table not set up.")
 
 
 def _get_production_row(name: str, table: Table) -> Row | None:
@@ -80,11 +79,10 @@ def _get_value(variable: models.Variable, db: models.EnvDB, development_mode: bo
 
     # this return is not strictly necessary since we are updating the variable object.
     return variable
-    
 
 
 def get(name: str, default=models.NotSet):
-    """Get an environment variable
+    """ Get an environment variable and register it's use
     Args:
         name, name of variable
         default, value to return if the varible is not available
