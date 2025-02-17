@@ -103,6 +103,4 @@ class TestSet:
             with helpers.raises(NotImplementedError):
                 environ.set(variable_name, variable_value)
             var = environ.get(variable_name)
-            for row in environ.DB.table.search():
-                print(f"{row['key']}: {row['value']}")
             assert var == variable_value, f"Did not get the expected value {var=} != {variable_value=}"
