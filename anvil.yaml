@@ -12,6 +12,9 @@ db_schema:
     - admin_ui: {order: 2, width: 200}
       name: info
       type: string
+    - admin_ui: {order: 3, width: 200}
+      name: development
+      type: bool
     server: full
     title: env
 dependencies:
