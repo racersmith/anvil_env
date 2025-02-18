@@ -15,7 +15,7 @@ DB = models.EnvDB(env_table_name="env")
 VARIABLES = models.Variables()
 
 # Check if we are in the published or development mode
-DEVELOPMENT_MODE = app.branch != "published"
+DEVELOPMENT_MODE = app.environment.name != "Published"
 
 
 
