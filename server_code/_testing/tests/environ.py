@@ -57,7 +57,6 @@ class TestGet:
             environ.src.DEVELOPMENT_MODE = False
             var = environ.get(variable_name, None)
             assert var == 'production_value', f"Did not get the expected value {var=} != production_value"
-            
 
 
 class TestSet:

@@ -18,6 +18,7 @@ VARIABLES = models.Variables()
 DEVELOPMENT_MODE = app.branch != "published"
 
 
+
 def info():
     """Display info about ENV"""
     s = ["ENV"]
