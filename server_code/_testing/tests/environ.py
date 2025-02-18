@@ -13,8 +13,9 @@ class TestGet:
             environ.get("non_existant_variable")
 
     def test_default(self):
-        var = environ.get("missing_variable", None)
-        assert var is None, f"expected var to be None got {var}"
+        default = 'my default value'
+        var = environ.get("missing_variable", default)
+        assert var is default, f"expected var to be {None} got {var}"
 
     def test_existing(self):
         variable_name = "test_existing"
@@ -28,20 +29,28 @@ class TestGet:
     def test_existing_with_default(self):
         variable_name = "test_existing_with_default"
         variable_value = str(hash(variable_name))
-        with helpers.temp_row(self._table, key=variable_name, value=variable_value, development=environ.DEVELOPMENT_MODE):
+        with helpers.temp_row(self._table, key=variable_name, value=variable_value, development=environ.src.DEVELOPMENT_MODE):
             var = environ.get(variable_name, None)
             assert (
                 var == variable_value
             ), f"Did not get the expected value {var=} != {variable_value=}"
 
-    def test_in_development(self):
-        environ.DEVELOPMENT_MODE = True
+    def test_dev_and_prod_vars(self):
+        environ.src.DEVELOPMENT_MODE = True
         variable_name = helpers.gen_str()
+        
+        dev_var = environ.get(variable_name, 'default_value')
+        assert dev_var == 'default_value', f"Didn't get the default value in dev mode: {dev_var}"
+        
+        environ.src.DEVELOPMENT_MODE = False
+        assert dev_var == 'default_value', f"Didn't get the default value in prod mode: {dev_var}"
+
+        environ.src.DEVELOPMENT_MODE = True
         with helpers.temp_writes():
             environ.set(variable_name, 'development_value', development=True)
             environ.set(variable_name, 'production_value', development=False)
             
-            environ.DEVELOPMENT_MODE = True
+            environ.src.DEVELOPMENT_MODE = True
             var = environ.get(variable_name, None)
             assert var == 'development_value', f"Did not get the expected value {var=} != development_value"
 
