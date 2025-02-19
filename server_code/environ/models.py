@@ -81,7 +81,7 @@ class Secret:
         return anvil.secrets.get_secret(self.secret_name)
 
     @classmethod
-    def decode(cls, variable: Any):
+    def _selective_decode(cls, variable: Any):
         """ Utilizing the default serilization for portable classes to check if this variable is a Secret
         We are going to pass the variable through if this is not a Secret
         if it is a Secret, we are going to attempt to get the secret.
@@ -107,7 +107,7 @@ class Variable:
         if self._value == NotSet:
             return self.default
         else:
-            return self._value
+            return Secret._selective_decode(self._value)
 
     @value.setter
     def value(self, value):
