@@ -1,6 +1,8 @@
 from anvil.tables import app_tables
 
+from enum import Enum
 from typing import Set
+
 
 class EnvDB:
     def __init__(self, env_table_name: str):

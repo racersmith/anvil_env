@@ -87,8 +87,8 @@ class TestSet:
         variable_name = "test_set_existing"
         variable_value = 1234
         environ.src.DB = environ.src.models.EnvDB('env')
-        with helpers.temp_row(
-            environ.DB.table, key=variable_name, value=helpers.gen_int(), development=True):
+        with helpers.temp_writes():
+            environ.set(variable_name, helpers.gen_int(), development=True)
             
             environ.set(variable_name, variable_value, development=True)
             environ.set(variable_name, variable_value + 1, development=False)
