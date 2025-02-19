@@ -43,9 +43,16 @@ runtime_options:
   server_spec: {base: python310-minimal}
   server_version: python3-sandbox
   version: 2
+secrets:
+  test_secret:
+    type: secret
+    value: {AFKPYPDLJMH2TYVK: rtunDopU/3aYMvXDE10kH+lXO/WoHZpRVX8XN3WeCmqt/8xnzD5rI+2FAMkfagDepqsM6ahNaSMg/WzO1HLNpW6y6u/4saifwm2t3VDNbewpOb2VoD7eG2ng1v3OfXx6/0EZetNdWNnGq+f0/C6mos34I7jG7rlW}
 services:
 - client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup: {module: _README, type: form}
 startup_form: null

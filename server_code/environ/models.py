@@ -1,7 +1,8 @@
 from anvil.tables import app_tables
+import anvil.secrets
 
-from enum import Enum
-from typing import Set
+from typing import Set, Any
+
 
 
 class EnvDB:
@@ -60,6 +61,7 @@ class EnvDB:
 
 
 class _NotSet:
+    """ Create a generic object for values that have not been defined yet """
     def __str__(self):
         return 'NotSet'
 
@@ -67,6 +69,30 @@ class _NotSet:
         return 'NotSet'
         
 NotSet = _NotSet()
+
+
+@anvil.server.portable_class
+class Secret:
+    """ Table compatible object to represent a secret request """
+    def __init__(self, secret_name):
+        self.secret_name = secret_name
+
+    def _get_secret(self):
+        return anvil.secrets.get_secret(self.secret_name)
+
+    @classmethod
+    def decode(cls, variable: Any):
+        """ Utilizing the default serilization for portable classes to check if this variable is a Secret
+        We are going to pass the variable through if this is not a Secret
+        if it is a Secret, we are going to attempt to get the secret.
+        """
+        if isinstance(variable, dict) and variable.get('type', None) == cls.SERIALIZATION_INFO[0]:
+            return cls(**variable['value'])._get_secret()
+            
+        return variable
+
+
+
 
 
 class Variable:

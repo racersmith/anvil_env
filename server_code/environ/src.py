@@ -4,6 +4,7 @@ import anvil.tables.query as q
 from anvil import app
 from . import models
 
+from typing import Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -113,7 +114,11 @@ def _get_value(
     return variable
 
 
-def get(name: str, default=models.NotSet):
+def _handle_secret(variable: Any) -> Any:
+    pass
+
+
+def get(name: str, default=models.NotSet) -> Any:
     """Get an environment variable and register it's use
     Args:
         name, name of variable
