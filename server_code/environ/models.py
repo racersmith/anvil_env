@@ -4,14 +4,15 @@ import anvil.secrets
 from typing import Set, Any
 
 
-
 class EnvDB:
     def __init__(self, env_table_name: str):
         self.name = env_table_name
         self.required_columns = {"key", "value", "info"}
         self.is_ready = self._is_ready()
         self.table = self._get_table()
-        self.development_allowed = self._development_allowed()
+
+        self.environments = self._get_environments()
+        self.environments_enabled = bool(self.environments)
     
     def _is_ready(self) -> bool:
         """Check that the table is setup and ready for use"""
@@ -32,8 +33,21 @@ class EnvDB:
         """Check for missing columns in table"""
         return self.required_columns - self._available_columns()
 
-    def _development_allowed(self) -> bool:
-        return 'development' in self._available_columns()
+    def _get_environments(self) -> Set[str]:
+        """ Extra bool columns are assumed to be environments """
+        environments = set()
+        table = self._get_table()
+        if table:
+            for column in self.table.list_columns():
+                if column['name'] not in self.required_columns and column['type'] == 'bool':
+                    environments.add(column['name'])
+            return environments
+        return environments
+        
+        return self._available_columns() - self.required_columns
+
+    def _get_default_env(self):
+        return {env: None for env in self.environments}
     
     def _get_table(self):
         """get the environment variable app table"""
@@ -71,49 +85,73 @@ class _NotSet:
 NotSet = _NotSet()
 
 
-@anvil.server.portable_class
-class Secret:
-    """ Table compatible object to represent a secret request """
-    def __init__(self, secret_name):
+class Secret(dict):
+    """ We are inheriting from dict so we can use it's serialization in the env table. """
+    SIGNATURE = '__SECRETS__'
+    
+    def __init__(self, secret_name: str):
+        """ Create a pointer to a value in the Secrets store.
+
+        This provides us with a easy way to add and retrieve secrets from the env table.
+        Secrets will be stored in the env table in the form:
+            {"__SECRETS__": secret_name}
+
+        This gives a simple way to add them directly in the table ui with minimal effort.
+
+        Args:
+            secret_name: The name of the secret in App Secrets
+        """
         self.secret_name = secret_name
 
-    def _get_secret(self):
+        # Package the secret pointer into the super dict.
+        super().__setitem__(self.SIGNATURE, secret_name)
+        
+
+    def _get_secret(self) -> str:
         return anvil.secrets.get_secret(self.secret_name)
 
+    def __str__(self):
+        return f"{self.SIGNATURE}: {self.secret_name}"
+    
     @classmethod
-    def _selective_decode(cls, variable: Any):
-        """ Utilizing the default serilization for portable classes to check if this variable is a Secret
-        We are going to pass the variable through if this is not a Secret
-        if it is a Secret, we are going to attempt to get the secret.
-        """
-        if isinstance(variable, dict) and variable.get('type', None) == cls.SERIALIZATION_INFO[0]:
-            return cls(**variable['value'])._get_secret()
-            
-        return variable
+    def _is_secret(cls, variable: Any):
+        """ Check if the variable matches the Secret signature """
+        return isinstance(variable, dict) and variable.get(cls.SIGNATURE, False)
 
-
-
-
+    @classmethod
+    def _load(cls, variable: dict):
+        """ Load the secret """
+        return cls(secret_name=variable[cls.SIGNATURE])
+        
 
 class Variable:
-    def __init__(self, name: str, default):
+    def __init__(self, name: str, default: Any):
         self.name = name
         self.default = default
         self._value = NotSet
         self.in_use = False
 
     @property
-    def value(self):
+    def value(self) -> Any:
         if self._value == NotSet:
             return self.default
+        elif isinstance(self._value, Secret):
+            # Only fetch the secret on demand
+            return self._value._get_secret()
         else:
-            return Secret._selective_decode(self._value)
+            return self._value
 
     @value.setter
-    def value(self, value):
-        assert value != NotSet, "'NotSet' is reservered."
+    def value(self, value: Any):
+        if value == NotSet: 
+            raise ValueError("'NotSet' is reservered.")
+            
         self.in_use = True
-        self._value = value
+        if Secret._is_secret(value):
+            # Load the value in as a Secret
+            self._value = Secret._load(value)
+        else:
+            self._value = value
 
     def __hash__(self):
         return hash(self.name)
@@ -126,15 +164,14 @@ class Variable:
 
     @property
     def details(self):
-        return f"{self.name}={self.value}, default={self.default}, in_use={self.in_use}"
+        """ Display details about the registered variables """
+        return f"{self.name}={self._value}, default={self.default}, in_use={self.in_use}"
 
 
 
 class Variables:
     def __init__(self):
-        self._all = set()
-        self._in_use = set()
-        self._available = set()
+        self._all = dict()
 
     def __str__(self):
         in_use = "\n\t\t".join([str(variable) for variable in self.in_use]) or "No variables in use."
@@ -152,25 +189,21 @@ class Variables:
 
     def _register(self, variable: Variable):
         """Add variable as currently in use from db"""
-        self._all.add(variable)
-        if variable.in_use:
-            self._in_use.add(variable)
-        else:
-            self._available.add(variable)
+        self._all[variable.name] = variable
     
     @property
     def all(self):
         """Get a set of all registered variable names"""
-        return self._all
+        return set(self._all.values())
 
     @property
     def in_use(self):
         """Get a set of variable names that are being set from the env table"""
-        return self._in_use
+        return set(filter(lambda var: var.in_use, self.all))
 
     @property
     def available(self):
         """Get a set of varible names that are utilizing their default value
         and not present in the env table.
         """
-        return self._available
+        return set(filter(lambda var: not var.in_use, self.all))

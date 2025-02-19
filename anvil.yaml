@@ -26,8 +26,14 @@ db_schema:
     - admin_ui: {order: 2, width: 200}
       name: info
       type: string
-    - admin_ui: {order: 3, width: 200}
-      name: development
+    - admin_ui: {order: 4, width: 200}
+      name: Debug
+      type: bool
+    - admin_ui: {order: 3.5, width: 200}
+      name: Published
+      type: bool
+    - admin_ui: {order: 5, width: 290}
+      name: Debug for user@example.com
       type: bool
     server: full
     title: env

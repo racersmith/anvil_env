@@ -2,7 +2,8 @@ import anvil.tables
 
 from anvil_testing import helpers
 
-from ...environ import models
+from ...environ import models, src
+
 
 class TestEnvDB:
     def test_good_table(self):
@@ -18,6 +19,16 @@ class TestEnvDB:
         assert db.table is None, "should not return a table"
         assert db._missing_table_columns() == db.required_columns, "Should require all of the columns"
 
+
+class TestSecret:
+    def test_storage(self):
+        name = helpers.gen_str()
+        secret = models.Secret(name)
+        with helpers.temp_writes():
+            row = src.DB.table.add_row(key=name, value=secret)
+            assert row['value'] is not None, "'value' should have something in there"
+            assert models.Secret._is_secret(row['value']), f"{row['value']} should be seen as a secret"
+        
 
 class TestVariable:
     def test_simple(self):
