@@ -17,9 +17,10 @@ def demo():
         log.append(f"environment.name: '{environ.src.ENVIRONMENT.name}'")
         for var in variables:
             try:
-                log.append(f"  environ.get('{var}') = {environ.get(var)}")
+                log.append(f"  environ.get('{var}') -> {environ.get(var)}")
             except Exception as e:
                 log.append(f"  environ.get('{var}') -> raises {type(e).__name__}: {e}")
+                log.append(f"  environ.get('{var}', default=1234) -> {environ.get(var, default=1234)}")    
         log.append(' ')
     print('\n'.join(log))
     
