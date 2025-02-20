@@ -1,4 +1,4 @@
-from setuptools.msvc import environ<p align="center">
+<p align="center">
 <img src="theme/assets/env_var-logo.png" width="256">
 </p>
 
