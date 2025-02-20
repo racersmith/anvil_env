@@ -2,7 +2,8 @@ import anvil.tables
 
 from anvil_testing import helpers
 
-from ...environ import models
+from ...environ import models, src
+
 
 class TestEnvDB:
     def test_good_table(self):
@@ -19,6 +20,16 @@ class TestEnvDB:
         assert db._missing_table_columns() == db.required_columns, "Should require all of the columns"
 
 
+class TestSecret:
+    def test_storage(self):
+        name = helpers.gen_str()
+        secret = models.Secret(name)
+        with helpers.temp_writes():
+            row = src.DB.table.add_row(key=name, value=secret)
+            assert row['value'] is not None, "'value' should have something in there"
+            assert models.Secret._is_secret(row['value']), f"{row['value']} should be seen as a secret"
+        
+
 class TestVariable:
     def test_simple(self):
         name = helpers.gen_str()
@@ -26,12 +37,12 @@ class TestVariable:
         variable = models.Variable(name, default=models.NotSet)
         assert variable.name == name, f"Variable name is wrong {variable.name=} != {name=}"
         assert variable.value == default, f"Variable value is wrong {variable.value=} != {default=}"
-        assert variable.in_use is False, f"Variable is not in use yet."
+        assert variable.in_use is False, "Variable is not in use yet."
 
         value = helpers.gen_int()
         variable.value = value
         assert variable.value == value, f"Variable value is wrong {variable.value=} != {value=}"
-        assert variable.in_use is True, f"Variable is in use."
+        assert variable.in_use is True, "Variable is in use."
 
     def test_set_use(self):
         a = models.Variable('a', 'a')
@@ -51,11 +62,11 @@ class TestVariable:
         default = 'default_value'
         a = models.Variable(name, default)
         assert name in str(a)
-        assert name in a.detailed()
-        assert default in a.detailed()
+        assert name in a.details
+        assert default in a.details
 
         a.value = 1234
-        assert '1234' in a.detailed()
+        assert '1234' in a.details
 
 
 class TestVariables:
