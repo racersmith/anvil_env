@@ -1,88 +1,248 @@
-# About This [Anvil](https://anvil.works/?utm_source=github:app_README) App
+from setuptools.msvc import environ<p align="center">
+<img src="theme/assets/env_var-logo.png" width="256">
+</p>
 
-### Build web apps with nothing but Python.
-
-The app in this repository is built with [Anvil](https://anvil.works?utm_source=github:app_README), the framework for building web apps with nothing but Python. You can clone this app into your own Anvil account to use and modify.
-
-Below, you will find:
-- [How to open this app](#opening-this-app-in-anvil-and-getting-it-online) in Anvil and deploy it online
-- Information [about Anvil](#about-anvil)
-- And links to some handy [documentation and tutorials](#tutorials-and-documentation)
-
-## Opening this app in Anvil and getting it online
-
-### Cloning the app
-
-Go to the [Anvil Editor](https://anvil.works/build?utm_source=github:app_README) (you might need to sign up for a free account) and click on “Clone from GitHub” (underneath the “Blank App” option):
-
-<img src="https://anvil.works/docs/version-control-new-ide/img/git/clone-from-github.png" alt="Clone from GitHub"/>
-
-Enter the URL of this GitHub repository. If you're not yet logged in, choose "GitHub credentials" as the authentication method and click "Connect to GitHub".
-
-<img src="https://anvil.works/docs/version-control-new-ide/img/git/clone-app-from-git.png" alt="Clone App from Git modal"/>
-
-Finally, click "Clone App".
-
-This app will then be in your Anvil account, ready for you to run it or start editing it! **Any changes you make will be automatically pushed back to this repository, if you have permission!** You might want to [make a new branch](https://anvil.works/docs/version-control-new-ide?utm_source=github:app_README).
-
-### Running the app yourself:
-
-Find the **Run** button at the top-right of the Anvil editor:
-
-<img src="https://anvil.works/docs/img/run-button-new-ide.png"/>
+ENV is a flexible environment variable handler that is designed to be compatible with dependency apps.
 
 
-### Publishing the app on your own URL
+# Basic Usage
+You can use ENV as a way to give flexibility to configuration variable without having to chase down where they live in the code base.
+```
+from ENV import environ
 
-Now you've cloned the app, you can [deploy it on the internet with two clicks](https://anvil.works/docs/deployment/quickstart?utm_source=github:app_README)! Find the **Publish** button at the top-right of the editor:
+my_variable = environ.get('MY_VARIABLE', defalut=1234)
+print(my_variable) -> 1234
+```
+This can be done without any setup other than adding ENV as a dependency.  However, by adding this type of default get to your code you can then ask about what variables are being used in the codebase from the sever console by running:
+```
+>>> from ENV import environ
+>>> environ.VARIABLES
 
-<img src="https://anvil.works/docs/deployment-new-ide/img/environments/publish-button.png"/>
+Environment Variables
+in_use:
+	No variables in use.
+available:
+	MY_VARIABLE
+```
 
-When you click it, you will see the Publish dialog:
+We can see that `my_variable` is available to override and that we currently do not have any variables in use.
 
-<img src="https://anvil.works/docs/deployment-new-ide/img/quickstart/empty-environments-dialog.png"/>
+# Setup
+Create a table called `env` with columns:
+* `key` of type `str`
+* `value` of type `simple object`
+* `info` of type `str`
 
-Click **Publish This App**, and you will see that your app has been deployed at a new, public URL:
+You can check the setup status in the server console by running:
+```python-repl
+>>> environ.DB
+ENV Table Status: Ready
+  'env' table created
+  key, value, info columns found
+```
+or information on what setup still needs to happen.
 
-<img src="https://anvil.works/docs/deployment-new-ide/img/quickstart/default-public-environment.png"/>
+# Usage
+After a table is setup in the parent app we get expanded functionality.
 
-That's it - **your app is now online**. Click the link and try it!
+## Overriding default values
+The default values of can be overridden by adding a record in the `env` table.  For instance, to override the `MY_VARIABLE` from earlier we can add the record:
 
-## About Anvil
 
-If you’re new to Anvil, welcome! Anvil is a platform for building full-stack web apps with nothing but Python. No need to wrestle with JS, HTML, CSS, Python, SQL and all their frameworks – just build it all in Python.
+`key=MY_VARIABLE, value=9876, info=this is just a test variable to demonstrate ENV usage`
 
-<figure>
-<figcaption><h3>Learn About Anvil In 80 Seconds👇</h3></figcaption>
-<a href="https://www.youtube.com/watch?v=3V-3g1mQ5GY" target="_blank">
-<img
-  src="https://anvil-website-static.s3.eu-west-2.amazonaws.com/anvil-in-80-seconds-YouTube.png"
-  alt="Anvil In 80 Seconds"
-/>
-</a>
-</figure>
-<br><br>
+To the `env` table.
 
-[![Try Anvil Free](https://anvil-website-static.s3.eu-west-2.amazonaws.com/mark-complete.png)](https://anvil.works?utm_source=github:app_README)
+Afterward, when we run the same code block:
+```python
+from ENV import environ
+my_variable = environ.get('MY_VARIABLE', default=1234)
+print(my_variable) -> 9876
+```
+We get the overridden value from the table rather than the default.
 
-To learn more about Anvil, visit [https://anvil.works](https://anvil.works?utm_source=github:app_README).
+## Forced Variables
+We can force values to be used in the `env` table by no providing any default value when using `get`.  If the value is not setup within the `env` table we will get a `LookupError`.
 
-## Tutorials and documentation
+```python-repl
+>>> from ENV import environ
+>>> url = environ.get('APP_URL')
+LookupError: environment variable: 'APP_URL' not found
+```
 
-### Tutorials
+After adding the record to the table:
+```python-repl
+>>> environ.get('APP_URL')
+example.com
+```
 
-If you are just starting out with Anvil, why not **[try the 10-minute Feedback Form tutorial](https://anvil.works/learn/tutorials/feedback-form?utm_source=github:app_README)**? It features step-by-step tutorials that will introduce you to the most important parts of Anvil.
+## Referencing App Secrets
+Direct access to App Secrets is possible using ENV.
 
-Anvil has tutorials on:
-- [Building Dashboards](https://anvil.works/learn/tutorials/data-science#dashboarding?utm_source=github:app_README)
-- [Multi-User Applications](https://anvil.works/learn/tutorials/multi-user-apps?utm_source=github:app_README)
-- [Building Web Apps with an External Database](https://anvil.works/learn/tutorials/external-database?utm_source=github:app_README)
-- [Deploying Machine Learning Models](https://anvil.works/learn/tutorials/deploy-machine-learning-model?utm_source=github:app_README)
-- [Taking Payments with Stripe](https://anvil.works/learn/tutorials/stripe?utm_source=github:app_README)
-- And [much more....](https://anvil.works/learn/tutorials?utm_source=github:app_README)
+To reference a secret in the `env` table wrap the App Secret name:
+```python
+from ENV import environ
 
-### Reference Documentation
+environ.set('my_secret', environ.Secret('test_secret'))
+```
 
-The Anvil reference documentation provides comprehensive information on how to use Anvil to build web applications. You can find the documentation [here](https://anvil.works/docs/overview?utm_source=github:app_README).
+This will create an entry in the `env` table:
+![secret entry](images/secret_table_entry.png)
 
-If you want to get to the basics as quickly as possible, each section of this documentation features a [Quick-Start Guide](https://anvil.works/docs/overview/quickstarts?utm_source=github:app_README).
+The secret is a simple dict with unicode character `🔒` `U1F512` as the key and the name
+of the app secret as the value.
+I wanted something that struct the right balance between easy to enter manually in the
+table but would not restrict possible table values.
+
+You can easily grab this character from the server console
+```pyton-repl
+>>> from ENV import environ
+>>> environ.Secret.SIGNATURE
+'🔒'
+```
+
+Now that we have a reference to an App Secret, we can access it like any other variable.
+```python
+from ENV import environ
+secret = environ.get('my_secret')
+print(secret) -> 42
+```
+
+Secrets are not cached and are accessed at point of use only so there should be no security
+difference between getting a secret using `ENV` or using `anvil.secrets.get_secret`
+
+
+# Environment Specific Variables
+There is full support for automatic selection of variables based on which environment the code is currently executing in.  The environment can be found by looking at the information in `anvil.app.envronment`.  More information about environments can be found in anvil's documentation [Environments and Code](https://anvil.works/docs/deployment-new-ide/environments-and-code#getting-the-current-environment).  The environments are determined by looking at the `environment.name` field.  Common environment names are:
+* Published
+* Production
+* Staging
+* Debug
+  * Debug for user@example.com
+
+Any `env` table column that is a type `bool` will be considered an environment identifier column.
+
+## Environment matching
+The process for resolving the current environment name with those in the `env` table is as follow:
+1. Find an exact match
+2. Find an environment in the table that is a `.startswith()` match 
+   * example: 
+     * environment.name = `Debug for bob@example.com`
+     * table environment columns:
+       * `Debug for abc@example.com`
+       * `Debug`
+     * Matches to `Debug`
+   * This also means that you could have a column `P` that would match both `Published` and `Production`
+3. Check for a generic row which has **all** environments set to None.
+   
+
+Debug environments support global values for all users by specifying creating a 
+`Debug` column in the `env` table.  This will match to all Debug environments.  
+However, you can create user specific values by adding their full Debug environment 
+name as a column to the `env` table.
+
+
+## Example Environment Specific Variables
+![example table](images/example_table.png)
+![example secrets](images/secrets_example.png)
+
+With the table above here is how different environments would resolve the same variables.
+```python-repl
+environment.name: 'Published'
+  environ.get('example') -> 9876
+  environ.get('fallback') -> Published only
+  environ.get('my_secret') -> 42
+ 
+environment.name: 'Debug for abc@example.com'
+  environ.get('example') -> 9876
+  environ.get('fallback') -> All other environments
+  environ.get('my_secret') -> not_42
+ 
+environment.name: 'Debug for bob@example.com'
+  environ.get('example') -> 1597
+  environ.get('fallback') -> All other environments
+  environ.get('my_secret') -> -42
+ 
+environment.name: 'Staging'
+  environ.get('example') -> raises LookupError: env: example not found in 'env' and no default value given.
+  environ.get('example', default=1234) -> 1234
+  environ.get('fallback') -> All other environments
+  environ.get('my_secret') -> raises LookupError: env: my_secret not found in 'env' and no default value given.
+  environ.get('my_secret', default=1234) -> 1234
+```
+
+**Things to note:**
+1. The all `False` `example` row did not default match
+2. The all `None` `fallback` row does match as a default
+3. When no match is found and no default is given a LookupError is raised
+4. When no match is found and a default is given, the default is returned.
+
+# Variable Tracking
+Variables are automatically tracked throughout the code whenever their value is set or retrieved.  This can be helpful for understanding what is available and in use without having to dig through dependency apps or find configuration variables.  This can be done from the server console:
+```python-repl
+>>> from ENV import environ
+>>> environ.VARIABLES
+>>> environ.VARIABLES
+Environment Variables
+in_use:
+	APP_URL
+available:
+	MY_VARIABLE
+```
+
+You can also query the names directly:
+```python-repl
+environ.VARIABLES.in_use
+environ.VARIABLES.available
+environ.VARIABLES.all
+```
+
+## Tracking
+Tracking is done whenever the value is set or retrieved.  
+So variables can only be tracked if the code has been executed.
+
+ServerModule
+```python
+from ENV import environ
+
+app_url = environ.get('APP_URL')
+if False:
+    my_var = environ.get('MY_VARIABLE', 1234)
+```
+now from the console:
+```python-repl
+>>> from ENV import environ
+>>> environ.VARIABLES
+environ.VARIABLES
+Environment Variables
+in_use:
+	APP_URL
+available:
+	No variables available
+```
+You will get no mention of `MY_VARIABLE` because the code was not executed.  
+You could use this as a feature by helping find unused variables or a bug if misunderstood.
+
+## Detailed Variable Info
+You can request detailed information about the registered variables.  The detailed view
+shows the value found in the table as well as the default given during `.get()`. 
+
+To put a layer between App Secret references, their values are not shown in the detailed view, rather their pointer is shown.
+```python-repl
+>>> environ.VARIABLES.detailed
+Environment Variables
+in_use:
+	fallback=All other environments, default=NotSet, in_use=True
+	example=9876, default=NotSet, in_use=True
+	my_secret=🔒test_secret_dev, default=NotSet, in_use=True
+available:
+	new_variable=NotSet, default=1234, in_use=False
+```
+
+# Testing
+I'm utilizing [anvil_testing](https://github.com/racersmith/anvil_testing):`CCW3SYLSAQHLCF2A` as a dependency for running tests.
+From a published **debug** URL you can run the tests by going to the `/test` route.
+You will also see the test url in the server console on startup.  For a non-cloned version the tests
+can be run here [https://afkpypdljmh2tyvk.anvil.app/JXQD55XPRBEGPGY7SJIY2BKJ/test](https://afkpypdljmh2tyvk.anvil.app/JXQD55XPRBEGPGY7SJIY2BKJ/test)
+
+If you don't want to use this dependency, just clone and delete the `_testing/` folder.

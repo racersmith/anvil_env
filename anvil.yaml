@@ -1,5 +1,19 @@
 allow_embedding: false
 db_schema:
+  basic_env:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: key
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: value
+      type: simpleObject
+    - admin_ui: {order: 2, width: 200}
+      name: info
+      type: string
+    server: full
+    title: basic_env
   env:
     client: none
     columns:
@@ -12,6 +26,15 @@ db_schema:
     - admin_ui: {order: 2, width: 200}
       name: info
       type: string
+    - admin_ui: {order: 4, width: 62}
+      name: Debug
+      type: bool
+    - admin_ui: {order: 3.5, width: 83}
+      name: Published
+      type: bool
+    - admin_ui: {order: 5, width: 212}
+      name: Debug for bob@example.com
+      type: bool
     server: full
     title: env
 dependencies:
@@ -26,9 +49,22 @@ runtime_options:
   server_spec: {base: python310-minimal}
   server_version: python3-sandbox
   version: 2
+secrets:
+  test_secret:
+    type: secret
+    value: {AFKPYPDLJMH2TYVK: OJz+XE9rozJbz4rOcG5HdCWThBWNre4ync/FSzOc1vUSXCpXGthyeKnex3Eb9w1lCmhOyKAwebLNXOjAvlDC+egyekF7fHYizUQtUIF3QwOfna8aAgIESWzLXKJNg9jVvA==}
+  test_secret_bob:
+    type: secret
+    value: {AFKPYPDLJMH2TYVK: UVbTpLg+gLVl+YKSdTQbbEGtw4F51yNRYFVxpCVeMuLTo6S2JtxvLAp5Y8EilCJGU/gQFfO1Pr6uZP6acw/2KAczwXaWZOj/0RV8+FIYmC7vzJgkwWILn4VvHxUNk6C6AC8=}
+  test_secret_dev:
+    type: secret
+    value: {AFKPYPDLJMH2TYVK: +R8F2FvN232Ed4h/FcORG05v7Cnq5Fi8f8q8emHxbFX1d0kwVwGHiPhrxD/I8SjTwQUO+h9kradxtPfSoNVYxpJf4yW0ntJvnF/ZsaMoskL96+uO4jJGmSjbzAPt0Uc89D738Fo=}
 services:
 - client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
-startup: {module: _README, type: form}
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
+startup: null
 startup_form: null
