@@ -1,19 +1,39 @@
 allow_embedding: false
 db_schema:
+  basic_env:
+    client: none
+    columns:
+    - admin_ui: {width: 200}
+      name: key
+      type: string
+    - admin_ui: {width: 200}
+      name: value
+      type: simpleObject
+    - admin_ui: {width: 200}
+      name: info
+      type: string
+    server: full
+    title: basic_env
   env:
     client: none
     columns:
-    - admin_ui: {order: 0, width: 200}
+    - admin_ui: {width: 200}
       name: key
       type: string
-    - admin_ui: {order: 1, width: 200}
+    - admin_ui: {width: 200}
       name: value
       type: simpleObject
-    - admin_ui: {order: 2, width: 200}
+    - admin_ui: {width: 200}
       name: info
       type: string
-    - admin_ui: {order: 3, width: 200}
-      name: development
+    - admin_ui: {width: 200}
+      name: Published
+      type: bool
+    - admin_ui: {width: 200}
+      name: Debug
+      type: bool
+    - admin_ui: {width: 290}
+      name: Debug for user@example.com
       type: bool
     server: full
     title: env
@@ -33,5 +53,8 @@ services:
 - client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup: {module: _README, type: form}
 startup_form: null
