@@ -84,14 +84,14 @@ NotSet = _NotSet()
 
 class Secret(dict):
     """ We are inheriting from dict so we can use it's serialization in the env table. """
-    SIGNATURE = '__SECRETS__'
+    SIGNATURE = '🔒'
     
     def __init__(self, secret_name: str):
         """ Create a pointer to a value in the Secrets store.
 
         This provides us with a easy way to add and retrieve secrets from the env table.
         Secrets will be stored in the env table in the form:
-            {"__SECRETS__": secret_name}
+            {"🔒": "secret_name"}
 
         This gives a simple way to add them directly in the table ui with minimal effort.
 

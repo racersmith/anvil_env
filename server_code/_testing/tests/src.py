@@ -1,45 +1,11 @@
-from anvil.tables import app_tables
 from anvil import tables
-from anvil import _AppInfo
 
 from anvil_testing import helpers
 
 from ... import environ
 from ...environ import models, src
 
-
-class _Mock:
-    def __init__(self):
-        # why the signature for envrionment uses 'description' but the object uses 'name' is beyond me... but here we are.
-        self._published_environment = _AppInfo._Environment(
-            description="Published", tags=[]
-        )
-        self._debug_environment = _AppInfo._Environment(
-            description="Debug for abc@example.com", tags=["debug"]
-        )
-        self._unknown_environment = _AppInfo._Environment(
-            description="Staging", tags=[]
-        )
-        self._environments_db = models.EnvDB("env")
-        self._basic_db = models.EnvDB("basic_env")
-
-    def enable_environments(self):
-        src.DB = self._environments_db
-
-    def disable_environments(self):
-        src.DB = self._basic_db
-
-    def debug(self):
-        src.ENVIRONMENT = self._debug_environment
-
-    def published(self):
-        src.ENVIRONMENT = self._published_environment
-
-    def unknown(self):
-        src.ENVIRONMENT = self._unknown_environment
-
-
-_mock = _Mock()
+from .conftest import _mock
 
 
 class TestNormalizeEnvironmentRequest:
@@ -209,11 +175,11 @@ class TestGet:
             var = environ.get(variable_name)
             assert environ.get(variable_name) == "PublishedValue", f"Didn't get the expected value for published env: {var}"
 
-            _mock.unknown()
+            # We don't have the staging evnilronment in our test table.
+            _mock.staging()
             var = environ.get(variable_name)
-            assert environ.get(variable_name) == "DefaultValue", f"Didn't get the expected value for unknown env: {var}"
+            assert environ.get(variable_name) == "DefaultValue", f"Didn't get the expected value for {src.ENVIRONMENT.name} env: {var}"
             
-
 
 class TestSet:
     # We will use this to temporarily override the dev mode state
@@ -319,8 +285,6 @@ class TestSecrets:
             
             _mock.published()
             secret = environ.get(name)
-            vars = environ.VARIABLES.all
-            
             var = environ.VARIABLES._all[name]    
             d = var.details
             assert secret not in d, f"{secret} -> {d}"
