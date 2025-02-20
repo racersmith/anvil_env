@@ -45,9 +45,6 @@ class EnvDB:
         return environments
         
         return self._available_columns() - self.required_columns
-
-    def _get_default_env(self):
-        return {env: None for env in self.environments}
     
     def _get_table(self):
         """get the environment variable app table"""

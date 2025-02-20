@@ -42,6 +42,47 @@ class _Mock:
 _mock = _Mock()
 
 
+class TestNormalizeEnvironmentRequest:
+    def __init__(self):
+        self.available = {'A', 'B', 'C'}
+        
+    def test_dict(self):
+        request = src._normalize_envrionment_request({'A': True, 'B': False, 'C': None}, self.available)
+        assert request == {'A': True}
+
+    def test_list(self):
+        request = src._normalize_envrionment_request(['A'], self.available)
+        assert request == {'A': True}
+
+    def test_set(self):
+        request = src._normalize_envrionment_request({'A'}, self.available)
+        assert request == {'A': True}
+
+    def test_str(self):
+        request = src._normalize_envrionment_request('A', self.available)
+        assert request == {'A': True}
+
+    def test_none(self):
+        request = src._normalize_envrionment_request(None, self.available)
+        assert request == {env: None for env in self.available}
+
+    def test_dict_bool_error(self):
+        with helpers.raises(TypeError):
+            src._normalize_envrionment_request({'A': 0}, self.available)
+
+    def test_dict_env_error(self):
+        with helpers.raises(LookupError):
+            src._normalize_envrionment_request({'D': True}, self.available)
+
+    def test_set_env_error(self):
+        with helpers.raises(LookupError):
+            src._normalize_envrionment_request({'D'}, self.available)
+
+    def test_str_env_error(self):
+        with helpers.raises(LookupError):
+            src._normalize_envrionment_request('ABC', self.available)
+
+
 class TestResolveEnvironment:
     def test_direct_match(self):
         env = src.resolve_environment('A', {'A', 'B'})
@@ -59,11 +100,11 @@ class TestResolveEnvironment:
 
     def test_no_match(self):
         with helpers.raises(LookupError):
-            env = src.resolve_environment('E', {'A', 'B', 'C'})
+            src.resolve_environment('E', {'A', 'B', 'C'})
 
     def test_ambiguous_matching(self):
         with helpers.raises(LookupError):
-            env = src.resolve_environment('A', {'A1', 'AA', 'B'})
+            src.resolve_environment('A', {'A1', 'AA', 'B'})
 
 
 class TestGet:
@@ -242,13 +283,44 @@ class TestSet:
 
 class TestSecrets:
     def test_single_secret(self):
-        pass
+        _mock.disable_environments()
+        _mock.debug()
+        secret = models.Secret('test_secret')
+        name = 'my_secret'
+        with helpers.temp_row(environ.src.DB.table, key=name, value=secret) as _:
+            var = environ.get(name)
+            assert var == '42', f"The answer is 42 not {var}"
+            
 
     def test_multi_env_secret(self):
-        pass
+        _mock.enable_environments()
+        with helpers.temp_writes():
+            pub_secret = models.Secret('test_secret')
+            name = 'my_secret'
+            environ.set(name, pub_secret, environments={'Published'})
 
-    def test_no_secret_found(self):
-        pass
+            dev_secret = models.Secret('test_secret_dev')
+            environ.set(name, dev_secret, environments={'Debug': True})
+            
+            _mock.published()
+            var = environ.get(name)
+            assert var == '42', f"The answer is 42 not {var}"
+
+            _mock.debug()
+            var = environ.get(name)
+            assert var == 'not_42', f"The answer is not_42 not {var}"
 
     def test_secret_not_shown_in_details(self):
-        pass
+        _mock.enable_environments()
+        with helpers.temp_writes():
+            pub_secret = models.Secret('test_secret')
+            name = helpers.gen_str()
+            environ.set(name, pub_secret, environments={'Published'})
+            
+            _mock.published()
+            secret = environ.get(name)
+            vars = environ.VARIABLES.all
+            
+            var = environ.VARIABLES._all[name]    
+            d = var.details
+            assert secret not in d, f"{secret} -> {d}"

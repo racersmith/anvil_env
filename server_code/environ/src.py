@@ -6,7 +6,7 @@ from anvil import _AppInfo
 
 from . import models
 
-from typing import Any, Set
+from typing import Any, Set, Iterable
 import logging
 
 logger = logging.getLogger(__name__)
@@ -60,15 +60,74 @@ def resolve_environment(
     return None
 
 
+def _normalize_envrionment_request(environments: dict | Iterable | str | None, availble_envrionments: Set) -> dict:
+    """ Normalize the environment search request
+    This normalizes the request form and verifies the environments
+    
+    Only True environments are returned in the results except for the special None case,
+    which populates all available_environments with None.
+    
+    Examples:
+        available_environments = {'A', 'B', 'C'}
+        
+        environments = {'A': True, 'B': False, 'C': None}
+        environments = ['A']
+        environments = 'A'
+        >> {'A': True}
+
+        envrionments = 'A', 'B'
+        >> {'A': True, 'B': True}
+
+        environments = None
+        >> {'A': None, 'B': None, 'C': None}
+    """
+    
+    if isinstance(environments, dict):
+        request = dict()
+        for env, value in environments.items():
+            if value not in {True, False, None}:
+                raise TypeError(f"environments dict must include only bool values or None. recieved: {value}")
+
+            if env not in availble_envrionments:
+                raise LookupError(f"{env} not found in list of available environments.")
+
+            # Strip out only the True values and discard all None/False
+            if value:
+                request[env] = value
+        return request
+
+    # Single environment given as string
+    if isinstance(environments, str):
+        if environments not in availble_envrionments:
+                raise LookupError(f"{environments} not found in list of available environments.")
+        return {environments: True}
+
+    # Default lookup case
+    if environments is None:
+        return {env: None for env in availble_envrionments}
+
+    # Iterable case
+    try:
+        request = dict()
+        for env in environments:
+            if env not in availble_envrionments:
+                raise LookupError(f"{env} not found in list of available environments.")
+            request[env] = True
+        return request
+    except TypeError as e:
+        raise TypeError(f"Expected a dict, iterable, str or None. recieved: {environments}") from e
+        
+
+
 def set(
-    name: str, value: Any, environments: dict | None = None, info: str | None = None
+    name: str, value: Any, environments: dict | Iterable | None = None, info: str | None = None
 ) -> None:
     """Set an environment variable
     Args:
         name: name of the variable to set
         value: value for the variable, can be any standard python object
+        environments: provide a dict with the enabled environments for this variable, a list of active envrionments or None for a default var.
         info: human readable information about the environment varaible
-        environments: provide a dict with the enabled environments for this variable or None to enable for all.
     """
 
     if environments and not DB.environments_enabled:
@@ -78,11 +137,9 @@ def set(
 
     if DB.is_ready:
         search = {"key": name}
-        if environments:
-            search.update(**environments)
-        elif DB.environments_enabled and environments is None:
-            # Create the default variable with all environments set to None
-            search.update(DB._get_default_env())
+        
+        env_request = _normalize_envrionment_request(environments, DB.environments)
+        search.update(**env_request)
 
         # find or create the row
         row = DB.table.get(**search) or DB.table.add_row(**search)
@@ -122,8 +179,9 @@ def _get_value(
     search = {"key": variable.name}
     # search.update(db._get_default_env())
     row = None
-    if db.environments_enabled:
+    if db.environments_enabled and environment is not None:
         environment = resolve_environment(environment.name, db.environments)
+        env_request = _normalize_envrionment_request(environment, db.environments)
         if environment:
             # Set our search to the current environment
             search[environment] = True
@@ -137,7 +195,8 @@ def _get_value(
             3. there was no entry for the environment specified and we are looking for a default
         These all have the same solution of looking for the row that matches with the default env.
         """
-        search.update(db._get_default_env())
+        env_request = _normalize_envrionment_request(None, db.environments)
+        search.update(env_request)
         row = _try_lookup(search, db.table)
 
     if row is not None:

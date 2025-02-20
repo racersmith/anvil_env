@@ -52,7 +52,10 @@ runtime_options:
 secrets:
   test_secret:
     type: secret
-    value: {AFKPYPDLJMH2TYVK: rtunDopU/3aYMvXDE10kH+lXO/WoHZpRVX8XN3WeCmqt/8xnzD5rI+2FAMkfagDepqsM6ahNaSMg/WzO1HLNpW6y6u/4saifwm2t3VDNbewpOb2VoD7eG2ng1v3OfXx6/0EZetNdWNnGq+f0/C6mos34I7jG7rlW}
+    value: {AFKPYPDLJMH2TYVK: OJz+XE9rozJbz4rOcG5HdCWThBWNre4ync/FSzOc1vUSXCpXGthyeKnex3Eb9w1lCmhOyKAwebLNXOjAvlDC+egyekF7fHYizUQtUIF3QwOfna8aAgIESWzLXKJNg9jVvA==}
+  test_secret_dev:
+    type: secret
+    value: {AFKPYPDLJMH2TYVK: +R8F2FvN232Ed4h/FcORG05v7Cnq5Fi8f8q8emHxbFX1d0kwVwGHiPhrxD/I8SjTwQUO+h9kradxtPfSoNVYxpJf4yW0ntJvnF/ZsaMoskL96+uO4jJGmSjbzAPt0Uc89D738Fo=}
 services:
 - client_config: {enable_v2: true}
   server_config: {}
