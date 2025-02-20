@@ -108,7 +108,7 @@ class Secret(dict):
         return anvil.secrets.get_secret(self.secret_name)
 
     def __str__(self):
-        return f"{self.SIGNATURE}: {self.secret_name}"
+        return f"{self.SIGNATURE}{self.secret_name}"
     
     @classmethod
     def _is_secret(cls, variable: Any):
