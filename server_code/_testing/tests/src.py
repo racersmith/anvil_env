@@ -239,3 +239,16 @@ class TestSet:
             assert (
                 var == variable_value
             ), f"Did not get the expected value {var=} != {variable_value=}"
+
+class TestSecrets:
+    def test_single_secret(self):
+        pass
+
+    def test_multi_env_secret(self):
+        pass
+
+    def test_no_secret_found(self):
+        pass
+
+    def test_secret_not_shown_in_details(self):
+        pass
