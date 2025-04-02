@@ -60,7 +60,7 @@ def resolve_environment(
     return None
 
 
-def _normalize_envrionment_request(environments: dict | Iterable | str | None, availble_envrionments: Set) -> dict:
+def _normalize_environment_request(environments: dict | Iterable | str | None, availble_envrionments: Set) -> dict:
     """ Normalize the environment search request
     This normalizes the request form and verifies the environments
     
@@ -118,7 +118,6 @@ def _normalize_envrionment_request(environments: dict | Iterable | str | None, a
         raise TypeError(f"Expected a dict, iterable, str or None. recieved: {environments}") from e
         
 
-
 def set(
     name: str, value: Any, environments: dict | Iterable | None = None, info: str | None = None
 ) -> None:
@@ -127,7 +126,7 @@ def set(
         name: name of the variable to set
         value: value for the variable, can be any standard python object
         environments: provide a dict with the enabled environments for this variable, a list of active envrionments or None for a default var.
-        info: human readable information about the environment varaible
+        info: human-readable information about the environment varaible
     """
 
     if environments and not DB.environments_enabled:
@@ -138,7 +137,7 @@ def set(
     if DB.is_ready:
         search = {"key": name}
         
-        env_request = _normalize_envrionment_request(environments, DB.environments)
+        env_request = _normalize_environment_request(environments, DB.environments)
         search.update(**env_request)
 
         # find or create the row
@@ -181,7 +180,7 @@ def _get_value(
     row = None
     if db.environments_enabled and environment is not None:
         environment = resolve_environment(environment.name, db.environments)
-        env_request = _normalize_envrionment_request(environment, db.environments)
+        env_request = _normalize_environment_request(environment, db.environments)
         if environment:
             # Set our search to the current environment
             search[environment] = True
@@ -195,7 +194,7 @@ def _get_value(
             3. there was no entry for the environment specified and we are looking for a default
         These all have the same solution of looking for the row that matches with the default env.
         """
-        env_request = _normalize_envrionment_request(None, db.environments)
+        env_request = _normalize_environment_request(None, db.environments)
         search.update(env_request)
         row = _try_lookup(search, db.table)
 

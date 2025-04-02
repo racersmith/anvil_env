@@ -13,42 +13,42 @@ class TestNormalizeEnvironmentRequest:
         self.available = {"A", "B", "C"}
 
     def test_dict(self):
-        request = src._normalize_envrionment_request(
+        request = src._normalize_environment_request(
             {"A": True, "B": False, "C": None}, self.available
         )
         assert request == {"A": True}
 
     def test_list(self):
-        request = src._normalize_envrionment_request(["A"], self.available)
+        request = src._normalize_environment_request(["A"], self.available)
         assert request == {"A": True}
 
     def test_set(self):
-        request = src._normalize_envrionment_request({"A"}, self.available)
+        request = src._normalize_environment_request({"A"}, self.available)
         assert request == {"A": True}
 
     def test_str(self):
-        request = src._normalize_envrionment_request("A", self.available)
+        request = src._normalize_environment_request("A", self.available)
         assert request == {"A": True}
 
     def test_none(self):
-        request = src._normalize_envrionment_request(None, self.available)
+        request = src._normalize_environment_request(None, self.available)
         assert request == {env: None for env in self.available}
 
     def test_dict_bool_error(self):
         with helpers.raises(TypeError):
-            src._normalize_envrionment_request({"A": 0}, self.available)
+            src._normalize_environment_request({"A": 0}, self.available)
 
     def test_dict_env_error(self):
         with helpers.raises(LookupError):
-            src._normalize_envrionment_request({"D": True}, self.available)
+            src._normalize_environment_request({"D": True}, self.available)
 
     def test_set_env_error(self):
         with helpers.raises(LookupError):
-            src._normalize_envrionment_request({"D"}, self.available)
+            src._normalize_environment_request({"D"}, self.available)
 
     def test_str_env_error(self):
         with helpers.raises(LookupError):
-            src._normalize_envrionment_request("ABC", self.available)
+            src._normalize_environment_request("ABC", self.available)
 
 
 class TestResolveEnvironment:
