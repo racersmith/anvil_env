@@ -9,9 +9,6 @@ db_schema:
     - admin_ui: {order: 1, width: 200}
       name: value
       type: simpleObject
-    - admin_ui: {order: 2, width: 200}
-      name: info
-      type: string
     server: full
     title: basic_env
   env:
