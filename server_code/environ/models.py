@@ -9,21 +9,26 @@ class EnvDB:
         self.name = env_table_name
         self.required_columns = {"key", "value"}
 
-        self.environments = self._get_environments()
-        self.environments_enabled = bool(self.environments)
-    
-    def _is_ready(self) -> bool:
+        # Lazy load information on request to allow more flexibility in uplink
+        self._is_ready = None
+        self._table = None
+        self._environments = None
+        self._environments_enabled = None
+
+    @property
+    def is_ready(self) -> bool:
         """Check that the table is setup and ready for use"""
-        return self._table_created() and not self._missing_table_columns()
+        if self._is_ready is None:
+            self._is_ready = self._table_created() and not self._missing_table_columns()
+        return self._is_ready
 
     def _table_created(self) -> bool:
         """Check if the table has been created"""
         return self.name in app_tables
 
     def _available_columns(self) -> Set[str]:
-        table = self._get_table()
-        if table:
-            return {col["name"] for col in table.list_columns()}
+        if self.table:
+            return {col["name"] for col in self.table.list_columns()}
         else:
             return set()
     
@@ -31,25 +36,29 @@ class EnvDB:
         """Check for missing columns in table"""
         return self.required_columns - self._available_columns()
 
-    def _get_environments(self) -> Set[str]:
+    @property
+    def environments(self) -> Set[str]:
         """ Extra bool columns are assumed to be environments """
-        environments = set()
-        table = self._get_table()
-        if table:
-            for column in self.table.list_columns():
-                if column['name'] not in self.required_columns and column['type'] == 'bool':
-                    environments.add(column['name'])
-            return environments
-        return environments
-        
-        return self._available_columns() - self.required_columns
-    
-    def _get_table(self):
+        if self._environments is None:
+            if self.table:
+                environments = set()
+                for column in self.table.list_columns():
+                    if column['name'] not in self.required_columns and column['type'] == 'bool':
+                        environments.add(column['name'])
+                self._environments = environments
+        return self._environments
+
+    @property
+    def environments_enabled(self) -> bool:
+        return bool(self.environments)
+
+    @property
+    def table(self):
         """get the environment variable app table"""
-        if self._table_created():
-            return app_tables[self.name]
-        else:
-            return None
+        if self._table is None:
+            if self._table_created():
+                self._table = app_tables[self.name]
+        return self._table
 
     def __str__(self) -> str:
         info = f"ENV Table Status: {'Ready' if self.is_ready else 'Requires setup'}\n"
