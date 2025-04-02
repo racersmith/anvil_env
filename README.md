@@ -177,6 +177,36 @@ environment.name: 'Staging'
 3. When no match is found and no default is given a LookupError is raised
 4. When no match is found and a default is given, the default is returned.
 
+
+## Automatic Environment Specific Tables
+It is easy to have database tables that are specific to environments by simply 
+adding entries for the table names:
+![Production/Development DB Tables](images/production_dev_db_table.png)
+![Production/Development DB Tables](images/env_setup_production_dev_db_tables.png)
+
+You can then access the tables using the table name:
+```python
+from ENV import environ
+
+data_table = app_tables[environ.get('data_table')]
+
+@anvil.server.callable
+def get_data():
+    return data_table.search()
+```
+
+
+# ENV in Uplink
+Along with being able to use the ENV as a third party dependency in your Anvil app,
+you can also install ENV from the github repo.  
+For example, to add the current `ENV` version to your `requirements.txt`:
+```requirements
+ENV @ git+https://github.com/racersmith/anvil_env.git@master
+```
+
+ENV will work just like it does on the app side. The only thing to keep in mind is that
+
+
 # Variable Tracking
 Variables are automatically tracked throughout the code whenever their value is set or retrieved.  This can be helpful for understanding what is available and in use without having to dig through dependency apps or find configuration variables.  This can be done from the server console:
 ```python-repl
