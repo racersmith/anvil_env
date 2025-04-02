@@ -144,7 +144,8 @@ def set(
         row = DB.table.get(**search) or DB.table.add_row(**search)
 
         # Add the variable information
-        row.update({"value": value, "info": info})
+        update = {"value": value, "info": info}
+        row.update({k: v for k, v in update.items() if k in row.keys()})
     else:
         raise tables.TableError(f"'{DB.name}' table not set up.")
 
