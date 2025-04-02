@@ -7,9 +7,7 @@ from typing import Set, Any
 class EnvDB:
     def __init__(self, env_table_name: str):
         self.name = env_table_name
-        self.required_columns = {"key", "value", "info"}
-        self.is_ready = self._is_ready()
-        self.table = self._get_table()
+        self.required_columns = {"key", "value"}
 
         self.environments = self._get_environments()
         self.environments_enabled = bool(self.environments)
