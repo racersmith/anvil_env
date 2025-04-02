@@ -17,4 +17,4 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-packages = [{include="environ", from="server_code"}]
+packages = [{include="environ", from="server_code", to="ENV"}]
