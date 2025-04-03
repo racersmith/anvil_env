@@ -2,8 +2,6 @@ from anvil import tables
 from anvil.tables import Row, Table
 from anvil import app
 
-from anvil import _AppInfo
-
 from . import models
 
 from typing import Any, Set, Iterable
@@ -18,16 +16,18 @@ DB = models.EnvDB(env_table_name="env")
 VARIABLES = models.Variables()
 
 # Check if we are in the published or development mode
-ENVIRONMENT = app.environment
+ENVIRONMENT = models.LazyEnvironment()
 
 
 def info():
     """Display info about ENV"""
-    s = ["ENV"]
-    s.append(f"Environment: {ENVIRONMENT.name}")
-    s.append(f"App branch: {app.branch}")
-    s.append(f"Table name: {DB.name}")
-    s.append(f"Table ready: {DB.is_ready}")
+    s = [
+        "ENV",
+        f"Environment: {ENVIRONMENT.name}",
+        f"App branch: {app.branch}",
+        f"Table name: {DB.name}",
+        f"Table ready: {DB.is_ready}"
+    ]
     if not DB.is_ready:
         s.append(f"  Table '{DB.name}' created: {DB._table_created()}")
         s.append(f"  Missing columns: {DB._missing_table_columns()}")
@@ -37,7 +37,7 @@ def info():
 
 def resolve_environment(
     current_environment: str, available_environments: Set[str]
-) -> str:
+) -> str | None:
     """Find which of the available table environments best match the given environment"""
     if current_environment in available_environments:
         # Check for the direct match of environment name
@@ -51,8 +51,7 @@ def resolve_environment(
         )
         if len(matching) == 1:
             return matching[0]
-        # elif len(matching) == 0:
-        #     raise LookupError(f"Not able to resolve the environment: '{current_environment}' to any of {available_environments}")
+
         elif len(matching) > 1:
             raise LookupError(
                 f"Environment: '{current_environment}' matches more than one environment: {matching}"
@@ -60,7 +59,7 @@ def resolve_environment(
     return None
 
 
-def _normalize_envrionment_request(environments: dict | Iterable | str | None, availble_envrionments: Set) -> dict:
+def _normalize_environment_request(environments: dict | Iterable | str | None, availble_envrionments: Set) -> dict:
     """ Normalize the environment search request
     This normalizes the request form and verifies the environments
     
@@ -75,7 +74,7 @@ def _normalize_envrionment_request(environments: dict | Iterable | str | None, a
         environments = 'A'
         >> {'A': True}
 
-        envrionments = 'A', 'B'
+        environments = 'A', 'B'
         >> {'A': True, 'B': True}
 
         environments = None
@@ -115,9 +114,8 @@ def _normalize_envrionment_request(environments: dict | Iterable | str | None, a
             request[env] = True
         return request
     except TypeError as e:
-        raise TypeError(f"Expected a dict, iterable, str or None. recieved: {environments}") from e
+        raise TypeError(f"Expected a dict, iterable, str or None. received: {environments}") from e
         
-
 
 def set(
     name: str, value: Any, environments: dict | Iterable | None = None, info: str | None = None
@@ -126,32 +124,35 @@ def set(
     Args:
         name: name of the variable to set
         value: value for the variable, can be any standard python object
-        environments: provide a dict with the enabled environments for this variable, a list of active envrionments or None for a default var.
-        info: human readable information about the environment varaible
+        environments: provide a dict with the enabled environments for this variable, a list of active environments
+                        or None for a default var.
+        info: human-readable information about the environment variable
     """
 
     if environments and not DB.environments_enabled:
         raise NotImplementedError(
-            f"Environments have not been enabled in the '{DB.name}' table.  Add bool columns for each environment ie. 'Published', 'Debug'"
+            f"Environments have not been enabled in the '{DB.name}' table.  "
+            "Add bool columns for each environment ie. 'Published', 'Debug'"
         )
 
     if DB.is_ready:
         search = {"key": name}
         
-        env_request = _normalize_envrionment_request(environments, DB.environments)
+        env_request = _normalize_environment_request(environments, DB.environments)
         search.update(**env_request)
 
         # find or create the row
         row = DB.table.get(**search) or DB.table.add_row(**search)
 
         # Add the variable information
-        row.update({"value": value, "info": info})
+        update = {"value": value, "info": info}
+        row.update({k: v for k, v in update.items() if k in row.keys()})
     else:
         raise tables.TableError(f"'{DB.name}' table not set up.")
 
 
 def _try_lookup(search: dict, table: Table) -> Row | None:
-    """Serach for a row and give feedback on multiple matches"""
+    """Search for a row and give feedback on multiple matches"""
     try:
         row = table.get(**search)
     except tables.TableError as e:
@@ -165,7 +166,7 @@ def _try_lookup(search: dict, table: Table) -> Row | None:
 
 
 def _get_value(
-    variable: models.Variable, db: models.EnvDB, environment: _AppInfo._Environment
+    variable: models.Variable, db: models.EnvDB, environment: models.LazyEnvironment
 ) -> models.Variable:
     """Get an environment variable
     Args:
@@ -177,14 +178,13 @@ def _get_value(
         variable object.
     """
     search = {"key": variable.name}
-    # search.update(db._get_default_env())
+
     row = None
     if db.environments_enabled and environment is not None:
-        environment = resolve_environment(environment.name, db.environments)
-        env_request = _normalize_envrionment_request(environment, db.environments)
-        if environment:
-            # Set our search to the current environment
-            search[environment] = True
+        environment_name = resolve_environment(environment.name, db.environments)
+        if environment_name:
+            # Try the simple search using the environment name
+            search[environment_name] = True
             row = _try_lookup(search, db.table)
 
     if row is None:
@@ -195,7 +195,7 @@ def _get_value(
             3. there was no entry for the environment specified and we are looking for a default
         These all have the same solution of looking for the row that matches with the default env.
         """
-        env_request = _normalize_envrionment_request(None, db.environments)
+        env_request = _normalize_environment_request(None, db.environments)
         search.update(env_request)
         row = _try_lookup(search, db.table)
 
@@ -208,16 +208,16 @@ def _get_value(
 
 
 def get(name: str, default=models.NotSet) -> Any:
-    """Get an environment variable and register it's use
+    """Get an environment variable and register its use
     Args:
         name, name of variable
-        default, value to return if the varible is not available
+        default, value to return if the variable is not available
 
     Returns:
         the object from the env table or the default value if set.
 
     Raises:
-        rasies a LookupError if the varible is not available in the env table and no
+        raises a LookupError if the variable is not available in the env table and no
         default value is given.
     """
     variable = models.Variable(name, default)

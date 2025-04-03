@@ -1,0 +1,20 @@
+[project]
+name = "ENV"
+version = "2.1.0"
+description = "Environment aware environment variables for Anvil apps."
+authors = [
+    {name = "Josh Smith",email = "racersmith@gmail.com"}
+]
+license = {file = "LICENSE.txt"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "anvil-uplink (>=0.5.2,<0.6.0)"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{include="environ", from="server_code", to="ENV"}]
