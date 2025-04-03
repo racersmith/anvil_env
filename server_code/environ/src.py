@@ -21,11 +21,13 @@ ENVIRONMENT = models.LazyEnvironment()
 
 def info():
     """Display info about ENV"""
-    s = ["ENV"]
-    s.append(f"Environment: {ENVIRONMENT.name}")
-    s.append(f"App branch: {app.branch}")
-    s.append(f"Table name: {DB.name}")
-    s.append(f"Table ready: {DB.is_ready}")
+    s = [
+        "ENV",
+        f"Environment: {ENVIRONMENT.name}",
+        f"App branch: {app.branch}",
+        f"Table name: {DB.name}",
+        f"Table ready: {DB.is_ready}"
+    ]
     if not DB.is_ready:
         s.append(f"  Table '{DB.name}' created: {DB._table_created()}")
         s.append(f"  Missing columns: {DB._missing_table_columns()}")
@@ -35,7 +37,7 @@ def info():
 
 def resolve_environment(
     current_environment: str, available_environments: Set[str]
-) -> str:
+) -> str | None:
     """Find which of the available table environments best match the given environment"""
     if current_environment in available_environments:
         # Check for the direct match of environment name
@@ -49,8 +51,7 @@ def resolve_environment(
         )
         if len(matching) == 1:
             return matching[0]
-        # elif len(matching) == 0:
-        #     raise LookupError(f"Not able to resolve the environment: '{current_environment}' to any of {available_environments}")
+
         elif len(matching) > 1:
             raise LookupError(
                 f"Environment: '{current_environment}' matches more than one environment: {matching}"
@@ -113,7 +114,7 @@ def _normalize_environment_request(environments: dict | Iterable | str | None, a
             request[env] = True
         return request
     except TypeError as e:
-        raise TypeError(f"Expected a dict, iterable, str or None. recieved: {environments}") from e
+        raise TypeError(f"Expected a dict, iterable, str or None. received: {environments}") from e
         
 
 def set(
@@ -123,13 +124,15 @@ def set(
     Args:
         name: name of the variable to set
         value: value for the variable, can be any standard python object
-        environments: provide a dict with the enabled environments for this variable, a list of active envrionments or None for a default var.
-        info: human-readable information about the environment varaible
+        environments: provide a dict with the enabled environments for this variable, a list of active environments
+                        or None for a default var.
+        info: human-readable information about the environment variable
     """
 
     if environments and not DB.environments_enabled:
         raise NotImplementedError(
-            f"Environments have not been enabled in the '{DB.name}' table.  Add bool columns for each environment ie. 'Published', 'Debug'"
+            f"Environments have not been enabled in the '{DB.name}' table.  "
+            "Add bool columns for each environment ie. 'Published', 'Debug'"
         )
 
     if DB.is_ready:
@@ -149,7 +152,7 @@ def set(
 
 
 def _try_lookup(search: dict, table: Table) -> Row | None:
-    """Serach for a row and give feedback on multiple matches"""
+    """Search for a row and give feedback on multiple matches"""
     try:
         row = table.get(**search)
     except tables.TableError as e:
@@ -175,14 +178,13 @@ def _get_value(
         variable object.
     """
     search = {"key": variable.name}
-    # search.update(db._get_default_env())
+
     row = None
     if db.environments_enabled and environment is not None:
-        environment = resolve_environment(environment.name, db.environments)
-        env_request = _normalize_environment_request(environment, db.environments)
-        if environment:
-            # Set our search to the current environment
-            search[environment] = True
+        environment_name = resolve_environment(environment.name, db.environments)
+        if environment_name:
+            # Try the simple search using the environment name
+            search[environment_name] = True
             row = _try_lookup(search, db.table)
 
     if row is None:
@@ -209,13 +211,13 @@ def get(name: str, default=models.NotSet) -> Any:
     """Get an environment variable and register its use
     Args:
         name, name of variable
-        default, value to return if the varible is not available
+        default, value to return if the variable is not available
 
     Returns:
         the object from the env table or the default value if set.
 
     Raises:
-        rasies a LookupError if the varible is not available in the env table and no
+        raises a LookupError if the variable is not available in the env table and no
         default value is given.
     """
     variable = models.Variable(name, default)
