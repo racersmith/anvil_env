@@ -204,7 +204,8 @@ For example, to add the current `ENV` version to your `requirements.txt`:
 ENV @ git+https://github.com/racersmith/anvil_env.git@master
 ```
 
-ENV will work just like it does on the app side. The only thing to keep in mind is that
+ENV will work just like it does on the app side. The only thing to keep in mind is that the environment is
+defined by what uplink key is currently in use.  
 
 
 # Variable Tracking
