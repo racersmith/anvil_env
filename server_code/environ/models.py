@@ -1,7 +1,29 @@
 from anvil.tables import app_tables
+from anvil import app
 import anvil.secrets
 
 from typing import Set, Any
+
+
+class LazyEnvironment:
+    """ Check the environment state at time of use to allow ENV import before establishing connection """
+    def __init__(self) -> None:
+        self._environment = None
+
+    def _cache(self):
+        """ Get the environment state if missing"""
+        if self._environment is None:
+            self._environment = app.environment
+
+    @property
+    def name(self) -> str:
+        self._cache()
+        return self._environment.name
+
+    @property
+    def tags(self) -> str:
+        self._cache()
+        return self._environment.tags
 
 
 class EnvDB:
@@ -170,7 +192,6 @@ class Variable:
     def details(self):
         """ Display details about the registered variables """
         return f"{self.name}={self._value}, default={self.default}, in_use={self.in_use}"
-
 
 
 class Variables:

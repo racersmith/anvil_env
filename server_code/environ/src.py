@@ -2,8 +2,6 @@ from anvil import tables
 from anvil.tables import Row, Table
 from anvil import app
 
-from anvil import _AppInfo
-
 from . import models
 
 from typing import Any, Set, Iterable
@@ -18,7 +16,7 @@ DB = models.EnvDB(env_table_name="env")
 VARIABLES = models.Variables()
 
 # Check if we are in the published or development mode
-ENVIRONMENT = app.environment
+ENVIRONMENT = models.LazyEnvironment()
 
 
 def info():
@@ -75,7 +73,7 @@ def _normalize_environment_request(environments: dict | Iterable | str | None, a
         environments = 'A'
         >> {'A': True}
 
-        envrionments = 'A', 'B'
+        environments = 'A', 'B'
         >> {'A': True, 'B': True}
 
         environments = None
@@ -165,7 +163,7 @@ def _try_lookup(search: dict, table: Table) -> Row | None:
 
 
 def _get_value(
-    variable: models.Variable, db: models.EnvDB, environment: _AppInfo._Environment
+    variable: models.Variable, db: models.EnvDB, environment: models.LazyEnvironment
 ) -> models.Variable:
     """Get an environment variable
     Args:
@@ -208,7 +206,7 @@ def _get_value(
 
 
 def get(name: str, default=models.NotSet) -> Any:
-    """Get an environment variable and register it's use
+    """Get an environment variable and register its use
     Args:
         name, name of variable
         default, value to return if the varible is not available
