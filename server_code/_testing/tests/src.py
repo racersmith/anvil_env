@@ -79,7 +79,7 @@ class TestGet:
     def test_error(self):
         _mock.disable_environments()
         with helpers.raises(LookupError):
-            environ.get("non_existant_variable")
+            environ.get("non_existent_variable")
 
     def test_default(self):
         _mock.disable_environments()
